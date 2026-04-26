@@ -43,3 +43,7 @@ tmp/
 public/uploads/contracts/*
 !public/uploads/contracts/.gitkeep
 repos/
+
+# python
+__pycache__/
+*.pyc

@@ -1,0 +1,437 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  SUPERUSER
+}
+
+enum ProductType {
+  OWNED
+  CONSIGNMENT
+}
+
+enum ConsignmentSettlementMode {
+  PERCENT_COMMISSION
+  FIXED_COST
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BIZUM
+}
+
+enum SaleKind {
+  NORMAL
+  RETURN_EXCHANGE
+}
+
+enum StockMovementType {
+  INITIAL
+  ENTRY
+  SALE
+  ADJUSTMENT
+}
+
+enum ReferenceType {
+  PRODUCT
+  SALE
+  INVENTORY_ENTRY
+  MANUAL
+}
+
+enum PurchaseOrderStatus {
+  OPEN
+  RECEIVED
+  CANCELLED
+}
+
+enum ExpenseCategory {
+  RENT
+  SELF_EMPLOYED
+  ELECTRICITY
+  INTERNET
+  SECURITY
+  POS
+  ACCOUNTING
+  SUPPLIES
+  MARKETING
+  MERCHANDISE
+  OTHER
+  SPACE_RENTAL
+  SERVICE_INCOME
+  OTHER_INCOME
+}
+
+enum ExpenseSourceType {
+  MANUAL
+  RECURRING
+  INVENTORY_ENTRY
+}
+
+enum ExpenseEntryKind {
+  EXPENSE
+  INCOME
+}
+
+enum StorageProvider {
+  GOOGLE_DRIVE
+}
+
+enum StorageConnectionStatus {
+  NOT_CONNECTED
+  PENDING
+  CONNECTED
+  ERROR
+}
+
+enum StorageFolderType {
+  BACKUPS
+  INVENTORY_ATTACHMENTS
+  SUPPLIER_ATTACHMENTS
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(ADMIN)
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sales            Sale[]
+  inventoryEntries InventoryEntry[]
+  purchaseOrders   PurchaseOrder[]
+  stockMovements   StockMovement[]
+  expenses         Expense[]
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products        Product[]
+  productSubtypes ProductSubtype[]
+  seasons         Season[]
+}
+
+model ProductSubtype {
+  id         String   @id @default(cuid())
+  name       String
+  categoryId String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category Category  @relation(fields: [categoryId], references: [id])
+  products Product[]
+
+  @@unique([categoryId, name])
+}
+
+model Season {
+  id         String   @id @default(cuid())
+  name       String
+  categoryId String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category Category  @relation(fields: [categoryId], references: [id])
+  products Product[]
+
+  @@unique([categoryId, name])
+}
+
+model Supplier {
+  id                        String                    @id @default(cuid())
+  name                      String
+  supplierCode              String?                   @unique
+  applyVatToCost            Boolean                   @default(false)
+  consignmentSettlementMode ConsignmentSettlementMode @default(PERCENT_COMMISSION)
+  contactName               String?
+  phone                     String?
+  email                     String?
+  supportsDirectPurchase    Boolean                   @default(false)
+  supportsSeasonalOrder     Boolean                   @default(false)
+  supportsConsignment       Boolean                   @default(false)
+  defaultStoreCommissionPct Decimal?                  @db.Decimal(5, 2)
+  contractPdfUrl            String?
+  notes                     String?
+  isActive                  Boolean                   @default(true)
+  createdAt                 DateTime                  @default(now())
+  updatedAt                 DateTime                  @updatedAt
+
+  products         Product[]
+  inventoryEntries InventoryEntry[]
+  purchaseOrders   PurchaseOrder[]
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sales Sale[]
+}
+
+model Product {
+  id                 String      @id @default(cuid())
+  code               String      @unique
+  name               String
+  description        String
+  categoryId         String
+  productSubtypeId   String?
+  seasonId           String?
+  size               String?
+  color              String?
+  basePrice          Decimal     @db.Decimal(10, 2)
+  cost               Decimal     @db.Decimal(10, 2)
+  stockCurrent       Int         @default(0)
+  productType        ProductType
+  supplierId         String
+  storeCommissionPct Decimal?    @db.Decimal(5, 2)
+  notes              String?
+  isActive           Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  category            Category             @relation(fields: [categoryId], references: [id])
+  productSubtype      ProductSubtype?      @relation(fields: [productSubtypeId], references: [id])
+  season              Season?              @relation(fields: [seasonId], references: [id])
+  supplier            Supplier             @relation(fields: [supplierId], references: [id])
+  saleLines           SaleLine[]
+  returnLines         SaleReturnLine[]
+  inventoryEntryLines InventoryEntryLine[]
+  purchaseOrderLines  PurchaseOrderLine[]
+  stockMovements      StockMovement[]
+}
+
+model Sale {
+  id                 String        @id @default(cuid())
+  saleNumber         String        @unique
+  date               DateTime
+  customerId         String?
+  userId             String
+  paymentMethod      PaymentMethod
+  saleKind           SaleKind      @default(NORMAL)
+  originalSaleId     String?
+  saleItemsTotalAmount Decimal     @default(0) @db.Decimal(10, 2)
+  returnTotalAmount  Decimal       @default(0) @db.Decimal(10, 2)
+  totalAmount        Decimal       @db.Decimal(10, 2)
+  notes              String?
+  createdAt          DateTime      @default(now())
+
+  customer      Customer?        @relation(fields: [customerId], references: [id])
+  user          User             @relation(fields: [userId], references: [id])
+  originalSale  Sale?            @relation("SaleReturnReference", fields: [originalSaleId], references: [id])
+  relatedReturns Sale[]          @relation("SaleReturnReference")
+  lines         SaleLine[]
+  returnLines   SaleReturnLine[]
+}
+
+model SaleLine {
+  id                         String      @id @default(cuid())
+  saleId                     String
+  productId                  String
+  quantity                   Int
+  soldUnitPrice              Decimal     @db.Decimal(10, 2)
+  subtotal                   Decimal     @db.Decimal(10, 2)
+  productTypeSnapshot        ProductType
+  unitCostSnapshot           Decimal?    @db.Decimal(10, 2)
+  storeCommissionPctSnapshot Decimal?    @db.Decimal(5, 2)
+  storeAmount                Decimal     @db.Decimal(10, 2)
+  supplierAmount             Decimal     @db.Decimal(10, 2)
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  returnLines SaleReturnLine[]
+}
+
+model SaleReturnLine {
+  id                 String   @id @default(cuid())
+  saleId             String
+  originalSaleLineId String
+  productId          String
+  quantity           Int
+  refundedUnitPrice  Decimal  @db.Decimal(10, 2)
+  subtotal           Decimal  @db.Decimal(10, 2)
+  createdAt          DateTime @default(now())
+
+  sale             Sale     @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  originalSaleLine SaleLine @relation(fields: [originalSaleLineId], references: [id], onDelete: Restrict)
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([saleId])
+  @@index([originalSaleLineId])
+  @@index([productId])
+}
+
+model InventoryEntry {
+  id             String   @id @default(cuid())
+  entryNumber    String   @unique
+  supplierId     String
+  date           DateTime
+  notes          String?
+  attachmentUrls String[] @default([])
+  userId         String
+  createdAt      DateTime @default(now())
+
+  supplier Supplier             @relation(fields: [supplierId], references: [id])
+  user     User                 @relation(fields: [userId], references: [id])
+  lines    InventoryEntryLine[]
+}
+
+model InventoryEntryLine {
+  id               String  @id @default(cuid())
+  inventoryEntryId String
+  productId        String
+  quantity         Int
+  unitCost         Decimal @db.Decimal(10, 2)
+
+  inventoryEntry InventoryEntry @relation(fields: [inventoryEntryId], references: [id], onDelete: Restrict)
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+model PurchaseOrder {
+  id             String              @id @default(cuid())
+  orderNumber    String              @unique
+  supplierId     String
+  date           DateTime
+  expectedDate   DateTime?
+  status         PurchaseOrderStatus @default(OPEN)
+  notes          String?
+  attachmentUrls String[]            @default([])
+  userId         String
+  createdAt      DateTime            @default(now())
+
+  supplier Supplier            @relation(fields: [supplierId], references: [id])
+  user     User                @relation(fields: [userId], references: [id])
+  lines    PurchaseOrderLine[]
+}
+
+model PurchaseOrderLine {
+  id              String  @id @default(cuid())
+  purchaseOrderId String
+  productId       String
+  quantity        Int
+  unitCost        Decimal @db.Decimal(10, 2)
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+model StockMovement {
+  id            String            @id @default(cuid())
+  productId     String
+  type          StockMovementType
+  referenceType ReferenceType
+  referenceId   String?
+  quantityDelta Int
+  reason        String?
+  notes         String?
+  userId        String
+  createdAt     DateTime          @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [userId], references: [id])
+}
+
+model RecurringExpenseRule {
+  id         String           @id @default(cuid())
+  kind       ExpenseEntryKind @default(EXPENSE)
+  category   ExpenseCategory
+  concept    String
+  amount     Decimal          @db.Decimal(10, 2)
+  notes      String?
+  startYear  Int
+  startMonth Int
+  endYear    Int?
+  endMonth   Int?
+  isActive   Boolean          @default(true)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  expenses Expense[]
+}
+
+model Expense {
+  id                String            @id @default(cuid())
+  year              Int
+  month             Int
+  kind              ExpenseEntryKind  @default(EXPENSE)
+  category          ExpenseCategory
+  concept           String
+  amount            Decimal           @db.Decimal(10, 2)
+  notes             String?
+  sourceType        ExpenseSourceType @default(MANUAL)
+  sourceReferenceId String?
+  recurringRuleId   String?
+  userId            String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  recurringRule RecurringExpenseRule? @relation(fields: [recurringRuleId], references: [id], onDelete: SetNull)
+  user          User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([recurringRuleId, year, month])
+  @@index([year, month])
+}
+
+model StorageIntegrationSetting {
+  id                    String                  @id @default(cuid())
+  provider              StorageProvider         @default(GOOGLE_DRIVE)
+  status                StorageConnectionStatus @default(NOT_CONNECTED)
+  connectedAccountEmail String?
+  oauthAccessToken      String?
+  oauthRefreshToken     String?
+  oauthScope            String?
+  oauthTokenExpiresAt   DateTime?
+  lastError             String?
+  rootFolderName        String?
+  rootFolderId          String?
+  rootFolderUrl         String?
+  notes                 String?
+  lastValidatedAt       DateTime?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  folders StorageFolderSetting[]
+}
+
+model StorageFolderSetting {
+  id            String                  @id @default(cuid())
+  integrationId String
+  folderType    StorageFolderType
+  folderName    String
+  folderId      String?
+  folderUrl     String?
+  status        StorageConnectionStatus @default(NOT_CONNECTED)
+  lastCheckedAt DateTime?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  integration StorageIntegrationSetting @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@unique([integrationId, folderType])
+}

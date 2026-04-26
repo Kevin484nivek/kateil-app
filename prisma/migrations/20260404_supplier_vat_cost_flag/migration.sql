@@ -1,0 +1,2 @@
+ALTER TABLE "Supplier"
+ADD COLUMN "applyVatToCost" BOOLEAN NOT NULL DEFAULT false;

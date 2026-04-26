@@ -1,0 +1,9 @@
+.git
+.github
+.next
+backups
+data
+docs
+infra
+node_modules
+README.md

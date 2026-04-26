@@ -1,0 +1,100 @@
+[
+  {
+    "id": "C9d0E1f2G3h4I5j6",
+    "name": "Infra Guard Silent 30m",
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 30
+              }
+            ]
+          }
+        },
+        "id": "a2cb744f-c5e8-4833-ad5d-59d0ca16f864",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -640,
+          260
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const base = 'http://prometheus:9090/api/v1/query';\n\nasync function query(expr) {\n  const res = await fetch(`${base}?query=${encodeURIComponent(expr)}`);\n  const data = await res.json();\n  const first = data?.data?.result?.[0]?.value?.[1];\n  const n = Number(first);\n  return Number.isFinite(n) ? n : null;\n}\n\nconst cpu = await query('100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)');\nconst mem = await query('(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100');\nconst swap = await query('(1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100');\nconst diskFree = await query('(node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"}) * 100');\nconst downCount = await query('count(up == 0)');\nconst probeFail = await query('count(probe_success == 0)');\n\nconst issues = [];\nif ((swap ?? 0) >= 70) issues.push(`Swap alta (${swap.toFixed(1)}%)`);\nif ((diskFree ?? 100) <= 20) issues.push(`Disco libre bajo en / (${diskFree.toFixed(1)}%)`);\nif ((cpu ?? 0) >= 90) issues.push(`CPU alta (${cpu.toFixed(1)}%)`);\nif ((mem ?? 0) >= 90) issues.push(`RAM alta (${mem.toFixed(1)}%)`);\nif ((downCount ?? 0) > 0) issues.push(`Servicios down: ${Number(downCount).toFixed(0)}`);\nif ((probeFail ?? 0) > 0) issues.push(`HTTP probes KO: ${Number(probeFail).toFixed(0)}`);\n\nconst currentState = issues.length ? 'ALERT' : 'OK';\nconst store = $getWorkflowStaticData('global');\nconst lastState = store.lastState || 'OK';\nconst lastSent = Number(store.lastSent || 0);\nconst now = Date.now();\n\nlet shouldSend = false;\nif (currentState === 'ALERT' && lastState !== 'ALERT') shouldSend = true;\nif (currentState === 'ALERT' && lastState === 'ALERT' && now - lastSent > 6 * 60 * 60 * 1000) shouldSend = true;\nif (currentState === 'OK' && lastState === 'ALERT') shouldSend = true;\n\nstore.lastState = currentState;\nif (shouldSend) store.lastSent = now;\nif (!shouldSend) return [];\n\nconst header = currentState === 'ALERT' ? 'GUARD ALERTA' : 'GUARD RESUELTO';\nconst body = currentState === 'ALERT'\n  ? issues.map((i) => `- ${i}`).join('\\n')\n  : 'Condiciones de riesgo normalizadas.';\n\nconst msg = [\n  `${header}`,\n  `Hora: ${new Date().toISOString()}`,\n  body,\n  `CPU ${cpu?.toFixed(1) ?? 'n/a'}% | RAM ${mem?.toFixed(1) ?? 'n/a'}% | Swap ${swap?.toFixed(1) ?? 'n/a'}% | Disk libre ${diskFree?.toFixed(1) ?? 'n/a'}%`\n].join('\\n');\n\nreturn [{ json: { message: msg } }];"
+        },
+        "id": "b1c1eb78-beb8-4b17-bf27-6a30f1d6d86f",
+        "name": "Evaluate Guard",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -360,
+          260
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6718927433",
+          "text": "={{ $json.message }}",
+          "additionalFields": {
+            "appendAttribution": false,
+            "parse_mode": "Markdown"
+          }
+        },
+        "id": "42f68136-bf95-4ec4-b596-c50f5be38789",
+        "name": "Telegram Guard",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          -120,
+          260
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "jDt17azdI8qDw4vY",
+            "name": "Docker Server Status"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Evaluate Guard",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Evaluate Guard": {
+        "main": [
+          [
+            {
+              "node": "Telegram Guard",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate"
+    },
+    "pinData": {},
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "tags": []
+  }
+]

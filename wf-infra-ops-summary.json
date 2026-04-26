@@ -1,0 +1,185 @@
+[
+  {
+    "id": "B7c8D9e0F1g2H3i4",
+    "name": "Infra Ops Summary",
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 20,
+                "triggerAtMinute": 0
+              }
+            ]
+          }
+        },
+        "id": "9e4e4a43-19f5-4e0b-91ee-49e96495cbf0",
+        "name": "Daily 20 Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -820,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "url": "http://alertmanager:9093/api/v2/alerts",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "ed2dce75-e5b3-4aef-9ad2-2f38d855e4e8",
+        "name": "Fetch Alerts Daily",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -560,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const arr = Array.isArray($json) ? $json : (Array.isArray($json.body) ? $json.body : []);\n\nconst active = arr.filter(a => a?.status?.state === 'active');\nconst critical = active.filter(a => (a?.labels?.severity || '').toLowerCase() === 'critical');\nconst warning = active.filter(a => (a?.labels?.severity || '').toLowerCase() === 'warning');\n\nconst now = new Date();\nconst isSunday = now.getDay() === 0;\n\nconst top = active.slice(0, 6).map(a => {\n  const name = a?.labels?.alertname || 'unknown';\n  const sev = a?.labels?.severity || 'unknown';\n  const inst = a?.labels?.instance || 'n/a';\n  return `- ${name} (${sev}) @ ${inst}`;\n});\n\nconst health = critical.length > 0 ? 'CRITICAL' : (warning.length > 0 ? 'WARNING' : 'OK');\n\nconst brief = [\n  `RESUMEN DIARIO [${health}]`,\n  `Fecha: ${now.toISOString()}`,\n  `Alertas activas: ${active.length} (critical: ${critical.length}, warning: ${warning.length})`,\n  active.length ? `Top: ${active[0]?.labels?.alertname || 'n/a'}` : 'Sin alertas activas.'\n].join('\\n');\n\nconst sunday = [\n  `PUNTO DE SITUACION SEMANAL [${health}]`,\n  `Fecha: ${now.toISOString()}`,\n  `Alertas activas: ${active.length} (critical: ${critical.length}, warning: ${warning.length})`,\n  '',\n  ...(top.length ? top : ['- Sin alertas activas']),\n  '',\n  'Accion recomendada:',\n  health === 'OK' ? '- Sistema estable. No requiere accion inmediata.' : '- Revisar Grafana/Alertmanager y priorizar alertas critical.'\n].join('\\n');\n\nreturn [{ json: { message: isSunday ? sunday : brief } }];"
+        },
+        "id": "c0bbff9f-f6d9-4903-b068-f3e8e538b88e",
+        "name": "Build Daily Message",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -320,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6718927433",
+          "text": "={{ $json.message }}",
+          "additionalFields": {
+            "appendAttribution": false,
+            "parse_mode": "Markdown"
+          }
+        },
+        "id": "90b995a7-f152-4f4e-8568-6fbf7f323df9",
+        "name": "Telegram Daily",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          -80,
+          120
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "jDt17azdI8qDw4vY",
+            "name": "Docker Server Status"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 30
+              }
+            ]
+          }
+        },
+        "id": "1f6a16a7-9698-4605-ba5d-a64881da1476",
+        "name": "Guard 30m Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -820,
+          420
+        ]
+      },
+      {
+        "parameters": {
+          "url": "http://alertmanager:9093/api/v2/alerts",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "95ef2de6-a7dd-4594-bf0f-7f4a89d73c74",
+        "name": "Fetch Alerts Guard",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -560,
+          420
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const arr = Array.isArray($json) ? $json : (Array.isArray($json.body) ? $json.body : []);\nconst active = arr.filter(a => a?.status?.state === 'active');\nconst critical = active.filter(a => (a?.labels?.severity || '').toLowerCase() === 'critical');\nconst warning = active.filter(a => (a?.labels?.severity || '').toLowerCase() === 'warning');\n\nconst now = Date.now();\nconst currentState = critical.length > 0 ? 'CRITICAL' : (warning.length > 0 ? 'WARNING' : 'OK');\n\nconst store = $getWorkflowStaticData('global');\nconst lastState = store.lastState || 'OK';\nconst lastSent = Number(store.lastSent || 0);\n\nlet shouldSend = false;\nif (currentState !== lastState) shouldSend = true;\nif (currentState !== 'OK' && now - lastSent > 6 * 60 * 60 * 1000) shouldSend = true;\n\nstore.lastState = currentState;\nif (shouldSend) store.lastSent = now;\n\nif (!shouldSend) return [];\n\nconst header = currentState === 'OK' ? 'GUARD RESUELTO' : 'GUARD ALERTA';\nconst summary = active.slice(0, 5).map(a => `- ${a?.labels?.alertname || 'unknown'} (${a?.labels?.severity || 'n/a'}) @ ${a?.labels?.instance || 'n/a'}`).join('\\n');\n\nconst message = [\n  header,\n  `Hora: ${new Date().toISOString()}`,\n  `Estado: ${currentState}`,\n  `Alertas activas: ${active.length} (critical: ${critical.length}, warning: ${warning.length})`,\n  summary || '- Sin alertas activas'\n].join('\\n');\n\nreturn [{ json: { message } }];"
+        },
+        "id": "7305f4de-e12b-4f26-a89b-8f183be32f39",
+        "name": "Evaluate Guard",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -320,
+          420
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6718927433",
+          "text": "={{ $json.message }}",
+          "additionalFields": {
+            "appendAttribution": false,
+            "parse_mode": "Markdown"
+          }
+        },
+        "id": "d80ce83c-f9c5-425f-b225-9735fdf98ab2",
+        "name": "Telegram Guard",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          -80,
+          420
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "jDt17azdI8qDw4vY",
+            "name": "Docker Server Status"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Daily 20 Trigger": {
+        "main": [[{"node":"Fetch Alerts Daily","type":"main","index":0}]]
+      },
+      "Fetch Alerts Daily": {
+        "main": [[{"node":"Build Daily Message","type":"main","index":0}]]
+      },
+      "Build Daily Message": {
+        "main": [[{"node":"Telegram Daily","type":"main","index":0}]]
+      },
+      "Guard 30m Trigger": {
+        "main": [[{"node":"Fetch Alerts Guard","type":"main","index":0}]]
+      },
+      "Fetch Alerts Guard": {
+        "main": [[{"node":"Evaluate Guard","type":"main","index":0}]]
+      },
+      "Evaluate Guard": {
+        "main": [[{"node":"Telegram Guard","type":"main","index":0}]]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate"
+    },
+    "pinData": {},
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "tags": []
+  }
+]

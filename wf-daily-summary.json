@@ -1,0 +1,100 @@
+[
+  {
+    "id": "B7c8D9e0F1g2H3i4",
+    "name": "Infra Daily & Sunday Summary",
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 20,
+                "triggerAtMinute": 0
+              }
+            ]
+          }
+        },
+        "id": "b5a61f56-f11c-4a2c-b4f7-57d68e49f2ac",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -620,
+          260
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const base = 'http://prometheus:9090/api/v1/query';\n\nasync function query(expr) {\n  const res = await fetch(`${base}?query=${encodeURIComponent(expr)}`);\n  const data = await res.json();\n  const first = data?.data?.result?.[0]?.value?.[1];\n  const n = Number(first);\n  return Number.isFinite(n) ? n : null;\n}\n\nconst cpu = await query('100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)');\nconst mem = await query('(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100');\nconst swap = await query('(1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100');\nconst diskFree = await query('(node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"}) * 100');\nconst downCount = await query('count(up == 0)');\nconst probeFail = await query('count(probe_success == 0)');\n\nconst now = new Date();\nconst isSunday = now.getDay() === 0;\nconst health = ((downCount ?? 0) > 0 || (probeFail ?? 0) > 0 || (swap ?? 0) > 80) ? 'ALERTA' : 'OK';\n\nconst brief = [\n  `RESUMEN DIARIO [${health}]`,\n  `Hora: ${now.toISOString()}`,\n  `CPU ${cpu?.toFixed(1) ?? 'n/a'}% | RAM ${mem?.toFixed(1) ?? 'n/a'}% | Swap ${swap?.toFixed(1) ?? 'n/a'}%`,\n  `Disk libre /: ${diskFree?.toFixed(1) ?? 'n/a'}%`,\n  `Servicios down: ${Number(downCount ?? 0).toFixed(0)} | Probes KO: ${Number(probeFail ?? 0).toFixed(0)}`\n].join('\\n');\n\nconst detailed = [\n  `PUNTO DE SITUACION SEMANAL [${health}]`,\n  `Hora: ${now.toISOString()}`,\n  '',\n  `- CPU host: ${cpu?.toFixed(2) ?? 'n/a'}%`,\n  `- RAM usada: ${mem?.toFixed(2) ?? 'n/a'}%`,\n  `- Swap usada: ${swap?.toFixed(2) ?? 'n/a'}%`,\n  `- Disco libre /: ${diskFree?.toFixed(2) ?? 'n/a'}%`,\n  `- Servicios no scrapeables: ${Number(downCount ?? 0).toFixed(0)}`,\n  `- Probes HTTP en fallo: ${Number(probeFail ?? 0).toFixed(0)}`,\n  '',\n  'Accion recomendada:',\n  health === 'OK' ? '- Sin accion urgente. Mantener vigilancia.' : '- Revisar alertas activas en Grafana/Alertmanager y actuar segun severidad.'\n].join('\\n');\n\nreturn [{ json: { message: isSunday ? detailed : brief } }];"
+        },
+        "id": "cc79d55e-79cf-4ef2-9c05-4621c585a7d5",
+        "name": "Build Daily Summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -360,
+          260
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6718927433",
+          "text": "={{ $json.message }}",
+          "additionalFields": {
+            "appendAttribution": false,
+            "parse_mode": "Markdown"
+          }
+        },
+        "id": "bb93f05c-c5ec-4061-a03e-73ca8e06fd93",
+        "name": "Telegram Daily Summary",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          -120,
+          260
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "jDt17azdI8qDw4vY",
+            "name": "Docker Server Status"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Build Daily Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Daily Summary": {
+        "main": [
+          [
+            {
+              "node": "Telegram Daily Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate"
+    },
+    "pinData": {},
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "tags": []
+  }
+]

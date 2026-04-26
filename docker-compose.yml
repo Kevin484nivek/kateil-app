@@ -1,0 +1,55 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock-sales-app
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - db
+    volumes:
+      - ./backups:/backups
+    ports:
+      - "127.0.0.1:3010:3000"
+    restart: unless-stopped
+    networks:
+      - internal
+
+  db:
+    image: postgres:16-alpine
+    container_name: stock-sales-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${APP_TIMEZONE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - internal
+
+  backup:
+    image: postgres:16-alpine
+    container_name: stock-sales-backup
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - ./scripts:/scripts:ro
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "/scripts/backup-postgres.sh"]
+    restart: "no"
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+
+networks:
+  internal:
+    driver: bridge

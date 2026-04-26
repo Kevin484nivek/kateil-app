@@ -1,0 +1,31 @@
+name: Repo Guardrails
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+jobs:
+  validate-repository:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required files
+        run: |
+          test -f README.md
+          test -f docker-compose.yml
+          test -f Dockerfile
+          test -f prisma/schema.prisma
+          test -f .env.example
+
+      - name: Ensure secrets are not committed
+        run: |
+          if find . -maxdepth 2 \( -name ".env" -o -name "*.sql" -o -name "*.dump" \) | grep -q .; then
+            echo "Found forbidden runtime or dump files in repository"
+            exit 1
+          fi

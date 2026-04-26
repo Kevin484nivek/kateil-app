@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { OrganizationModuleKey, OrganizationMembershipRole, PrismaClient } from "@prisma/client";
 
 import { hashPassword } from "../src/lib/auth/password";
 
@@ -28,7 +28,7 @@ async function main() {
     ),
   );
 
-  await prisma.user.upsert({
+  const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {
       name: adminName,
@@ -43,6 +43,67 @@ async function main() {
       role: "SUPERADMIN",
     },
   });
+
+  const organization = await prisma.organization.upsert({
+    where: { slug: "kateil-base" },
+    update: { isActive: true },
+    create: {
+      slug: "kateil-base",
+      name: "Kateil Base",
+      isActive: true,
+    },
+  });
+
+  await prisma.organizationMembership.upsert({
+    where: {
+      organizationId_userId: {
+        organizationId: organization.id,
+        userId: admin.id,
+      },
+    },
+    update: {
+      isActive: true,
+      role: OrganizationMembershipRole.OWNER,
+    },
+    create: {
+      organizationId: organization.id,
+      userId: admin.id,
+      role: OrganizationMembershipRole.OWNER,
+      isActive: true,
+    },
+  });
+
+  const defaultModules: OrganizationModuleKey[] = [
+    "CATALOG_CORE",
+    "STOCK_CORE",
+    "SALES_CORE",
+    "MERCHANDISE_CORE",
+    "SEARCH_CORE",
+    "CUSTOMERS_PLUS",
+    "SUPPLIERS_PLUS",
+    "INVENTORY_PLUS",
+    "EXPENSES_PLUS",
+    "ANALYTICS_PLUS",
+  ];
+
+  await Promise.all(
+    defaultModules.map((moduleKey) =>
+      prisma.organizationModule.upsert({
+        where: {
+          organizationId_moduleKey: {
+            organizationId: organization.id,
+            moduleKey,
+          },
+        },
+        update: { isEnabled: true },
+        create: {
+          organizationId: organization.id,
+          moduleKey,
+          isEnabled: true,
+        },
+      }),
+    ),
+  );
 
   console.log(`Seed complete. Admin user ready: ${adminEmail}`);
 }

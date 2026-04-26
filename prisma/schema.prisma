@@ -100,6 +100,25 @@ enum StorageFolderType {
   SUPPLIER_ATTACHMENTS
 }
 
+enum OrganizationMembershipRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum OrganizationModuleKey {
+  CATALOG_CORE
+  STOCK_CORE
+  SALES_CORE
+  MERCHANDISE_CORE
+  SEARCH_CORE
+  CUSTOMERS_PLUS
+  SUPPLIERS_PLUS
+  INVENTORY_PLUS
+  EXPENSES_PLUS
+  ANALYTICS_PLUS
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -116,6 +135,48 @@ model User {
   purchaseOrders   PurchaseOrder[]
   stockMovements   StockMovement[]
   expenses         Expense[]
+  memberships      OrganizationMembership[]
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships OrganizationMembership[]
+  modules     OrganizationModule[]
+}
+
+model OrganizationMembership {
+  id             String                     @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrganizationMembershipRole @default(MEMBER)
+  isActive       Boolean                    @default(true)
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model OrganizationModule {
+  id             String                @id @default(cuid())
+  organizationId String
+  moduleKey      OrganizationModuleKey
+  isEnabled      Boolean               @default(true)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, moduleKey])
 }
 
 model Category {

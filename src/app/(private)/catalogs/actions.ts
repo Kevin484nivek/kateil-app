@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
+import { requireUserSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
+import { assertModuleAccess } from "@/lib/platform/modules";
 import { getRequiredString } from "@/lib/utils/form";
 
 async function createCatalogEntry(kind: "category" | "productSubtype" | "season", name: string) {
@@ -163,11 +165,17 @@ function revalidateCatalogs() {
 }
 
 export async function createCategoryAction(formData: FormData) {
+  const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
+
   await createCatalogEntry("category", getRequiredString(formData, "name"));
   revalidateCatalogs();
 }
 
 export async function updateCategoryAction(formData: FormData) {
+  const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
+
   await updateCatalogEntry(
     "category",
     getRequiredString(formData, "id"),
@@ -177,6 +185,9 @@ export async function updateCategoryAction(formData: FormData) {
 }
 
 export async function toggleCategoryAction(formData: FormData) {
+  const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
+
   await toggleCatalogEntry(
     "category",
     getRequiredString(formData, "id"),
@@ -186,6 +197,9 @@ export async function toggleCategoryAction(formData: FormData) {
 }
 
 export async function createProductSubtypeAction(formData: FormData) {
+  const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
+
   await createCategoryChild(
     "productSubtype",
     getRequiredString(formData, "categoryId"),
@@ -195,6 +209,9 @@ export async function createProductSubtypeAction(formData: FormData) {
 }
 
 export async function updateProductSubtypeAction(formData: FormData) {
+  const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
+
   await updateCategoryChild(
     "productSubtype",
     getRequiredString(formData, "id"),
@@ -205,6 +222,9 @@ export async function updateProductSubtypeAction(formData: FormData) {
 }
 
 export async function toggleProductSubtypeAction(formData: FormData) {
+  const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
+
   await toggleCatalogEntry(
     "productSubtype",
     getRequiredString(formData, "id"),
@@ -214,6 +234,9 @@ export async function toggleProductSubtypeAction(formData: FormData) {
 }
 
 export async function createSeasonAction(formData: FormData) {
+  const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
+
   await createCategoryChild(
     "season",
     getRequiredString(formData, "categoryId"),
@@ -223,6 +246,9 @@ export async function createSeasonAction(formData: FormData) {
 }
 
 export async function updateSeasonAction(formData: FormData) {
+  const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
+
   await updateCategoryChild(
     "season",
     getRequiredString(formData, "id"),
@@ -233,6 +259,9 @@ export async function updateSeasonAction(formData: FormData) {
 }
 
 export async function toggleSeasonAction(formData: FormData) {
+  const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
+
   await toggleCatalogEntry(
     "season",
     getRequiredString(formData, "id"),

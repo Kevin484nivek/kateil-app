@@ -4,13 +4,16 @@ import { UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { prisma } from "@/lib/db/prisma";
+
 const SESSION_COOKIE_NAME = "kateil_session";
 const SESSION_MAX_AGE = 60 * 60 * 12;
 
-type SessionPayload = {
+export type SessionPayload = {
   userId: string;
   email: string;
   role: UserRole;
+  activeOrgId: string;
   exp: number;
 };
 
@@ -43,6 +46,10 @@ function decode(token: string): SessionPayload | null {
   }
 
   const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as SessionPayload;
+
+  if (!payload.activeOrgId) {
+    return null;
+  }
 
   if (payload.exp < Date.now()) {
     return null;
@@ -80,7 +87,38 @@ export async function getUserSession() {
     return null;
   }
 
-  return decode(token);
+  const decoded = decode(token);
+
+  if (!decoded) {
+    return null;
+  }
+
+  let membership = null;
+
+  try {
+    membership = await prisma.organizationMembership.findFirst({
+      where: {
+        userId: decoded.userId,
+        organizationId: decoded.activeOrgId,
+        isActive: true,
+        organization: {
+          isActive: true,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+  } catch (error) {
+    console.warn("Falling back to legacy session mode while tenant tables are unavailable.", error);
+    return decoded;
+  }
+
+  if (!membership) {
+    return null;
+  }
+
+  return decoded;
 }
 
 export async function requireUserSession() {

@@ -16,10 +16,20 @@ export default async function PrivateLayout({
     where: { id: session.userId },
     select: { name: true },
   });
+  const enabledModules = await prisma.organizationModule.findMany({
+    where: {
+      organizationId: session.activeOrgId,
+      isEnabled: true,
+    },
+    select: {
+      moduleKey: true,
+    },
+  });
 
   return (
     <div className="private-shell">
       <Sidebar
+        enabledModules={enabledModules.map((module) => module.moduleKey)}
         logoutAction={logoutAction}
         sessionName={currentUser?.name ?? session.email}
       />

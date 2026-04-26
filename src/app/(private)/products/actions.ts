@@ -7,6 +7,7 @@ import { requireUserSession } from "@/lib/auth/session";
 import { buildProductCodeFromSupplierCode } from "@/lib/catalogs/supplier-code";
 import { resolveProductSubtypeId, resolveSeasonId } from "@/lib/catalogs/product-taxonomy";
 import { prisma } from "@/lib/db/prisma";
+import { assertModuleAccess } from "@/lib/platform/modules";
 import {
   getOptionalDecimal,
   getOptionalString,
@@ -27,6 +28,7 @@ const idleProductFormState: ProductFormState = {
 
 export async function createProductAction(formData: FormData) {
   const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
 
   const name = getRequiredString(formData, "name");
   const description = getRequiredString(formData, "description");
@@ -106,6 +108,9 @@ export async function createProductAction(formData: FormData) {
 }
 
 export async function toggleProductAction(formData: FormData) {
+  const session = await requireUserSession();
+  await assertModuleAccess(session, "CATALOG_CORE");
+
   const productId = getRequiredString(formData, "productId");
   const nextState = String(formData.get("nextState")) === "true";
 
@@ -124,6 +129,7 @@ export async function updateProductAction(
 ): Promise<ProductFormState> {
   try {
     const session = await requireUserSession();
+    await assertModuleAccess(session, "CATALOG_CORE");
     const productId = getRequiredString(formData, "productId");
     const name = getRequiredString(formData, "name");
     const description = getRequiredString(formData, "description");

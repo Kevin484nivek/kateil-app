@@ -3,8 +3,10 @@ import Link from "next/link";
 import { ProductType } from "@prisma/client";
 
 import { FloatingNoticeHost } from "@/components/ui/floating-notice-host";
+import { requireUserSession } from "@/lib/auth/session";
 import { ProductForm } from "@/components/ui/product-form";
 import { prisma } from "@/lib/db/prisma";
+import { requireModuleAccess } from "@/lib/platform/modules";
 import { getProductTypeLabel } from "@/lib/ui/labels";
 import { tokenizeSearchQuery } from "@/lib/utils/search";
 
@@ -81,6 +83,9 @@ function buildProductsPageHref(
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const session = await requireUserSession();
+  await requireModuleAccess(session, "CATALOG_CORE");
+
   const requestedFilters = (await searchParams) ?? {};
   const filters: ProductSearchFilters = {
     ...requestedFilters,

@@ -10,7 +10,9 @@ import {
   updateSeasonAction,
 } from "@/app/(private)/catalogs/actions";
 import { ActionForm } from "@/components/ui/action-form";
+import { requireUserSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
+import { requireModuleAccess } from "@/lib/platform/modules";
 
 type CatalogChild = {
   id: string;
@@ -180,6 +182,9 @@ function CategoryCard(props: {
 }
 
 export default async function CatalogsPage() {
+  const session = await requireUserSession();
+  await requireModuleAccess(session, "CATALOG_CORE");
+
   const categoriesRaw = await prisma.category.findMany({
     include: {
       productSubtypes: {

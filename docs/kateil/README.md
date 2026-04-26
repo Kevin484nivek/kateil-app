@@ -3,14 +3,11 @@
 ## Documento rector
 
 - [KATEIL Foundation Charter v1](C:/Users/kevin/Documents/Playground/docs/kateil/foundation-charter-v1.md) - `Draft`
+- [KATEIL Source of Truth v1](C:/Users/kevin/Documents/Playground/repos/kateil-app/docs/kateil/source-of-truth-v1.md) - `Draft operativo`
 
 ## Decisiones cerradas MVP (actual)
 
-- cloud inicial: `AWS`
-- despliegue inicial: `Lightsail Linux` con `IPv4 publica`
-- plan inicial: `12 USD/mes` (`2 vCPU`, `2 GB RAM`, `60 GB SSD`)
-- entornos iniciales: `dev local` + `prod cloud` (sin staging cloud)
-- escalado por umbrales: `12 -> 24 -> 44 -> 84`
+- ver decisiones vigentes en `source-of-truth-v1.md`
 
 ## Documentos de contexto ya creados
 

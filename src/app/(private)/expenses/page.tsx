@@ -197,19 +197,23 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
   const movementQuery = params.q?.trim() ?? "";
   const requestedMovementPage = getCurrentMovementPage(params.movementPage);
 
-  await prisma.$transaction(async (tx) => {
-    if (mode === "year") {
-      await syncRecurringExpensesForPeriods(
-        tx,
-        Array.from({ length: 12 }, (_, index) => ({
-          year: selectedYear,
-          month: index + 1,
-        })),
-      );
-    } else {
-      await syncRecurringExpensesForPeriods(tx, [{ year: selectedYear, month: selectedMonth }]);
-    }
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (mode === "year") {
+        await syncRecurringExpensesForPeriods(
+          tx,
+          Array.from({ length: 12 }, (_, index) => ({
+            year: selectedYear,
+            month: index + 1,
+          })),
+        );
+      } else {
+        await syncRecurringExpensesForPeriods(tx, [{ year: selectedYear, month: selectedMonth }]);
+      }
+    });
+  } catch (error) {
+    console.error("Failed to sync recurring expenses for selected period", error);
+  }
 
   const [expenses, recurringRules] = await Promise.all([
     prisma.expense.findMany({

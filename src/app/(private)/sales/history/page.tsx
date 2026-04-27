@@ -1,8 +1,10 @@
 import type { Route } from "next";
 import Link from "next/link";
 
+import { requireUserSession } from "@/lib/auth/session";
 import { PeriodSelector } from "@/components/ui/period-selector";
 import { prisma } from "@/lib/db/prisma";
+import { requireModuleAccess } from "@/lib/platform/modules";
 import { getPaymentMethodLabel } from "@/lib/ui/labels";
 import { tokenizeSearchQuery } from "@/lib/utils/search";
 import { APP_TIME_ZONE, formatMadridDateTime } from "@/lib/utils/datetime";
@@ -201,6 +203,9 @@ function SalesHistoryMonthTabs({
 }
 
 export default async function SalesHistoryPage({ searchParams }: SalesHistoryPageProps) {
+  const session = await requireUserSession();
+  await requireModuleAccess(session, "SALES_CORE");
+
   const resolvedSearchParams = await searchParams;
   const currentPageRequest = getCurrentPage(resolvedSearchParams?.page);
   const currentMode = getPeriodMode(resolvedSearchParams?.mode);

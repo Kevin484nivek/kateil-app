@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { requireUserSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { getEffectiveUnitCost } from "@/lib/finance/costs";
+import { assertModuleAccess } from "@/lib/platform/modules";
 import { getOptionalString, getRequiredString } from "@/lib/utils/form";
 
 function buildSaleNumber(sequence: number) {
@@ -127,6 +128,8 @@ function getUnitCostSnapshot(input: {
 
 export async function createSaleAction(formData: FormData) {
   const session = await requireUserSession();
+  await assertModuleAccess(session, "SALES_CORE");
+
   const saleModeValue = String(formData.get("saleMode") ?? "").trim();
   const saleKind = saleModeValue === SaleKind.RETURN_EXCHANGE ? SaleKind.RETURN_EXCHANGE : SaleKind.NORMAL;
   const originalSaleId = getOptionalString(formData, "originalSaleId");

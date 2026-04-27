@@ -1,7 +1,9 @@
 import { SaleBuilder } from "@/components/ui/sale-builder";
 import { FloatingNoticeHost } from "@/components/ui/floating-notice-host";
 import { SaleSuccessNotice } from "@/components/ui/sale-success-notice";
+import { requireUserSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
+import { requireModuleAccess } from "@/lib/platform/modules";
 import { getProductTypeLabel } from "@/lib/ui/labels";
 
 import { createSaleAction } from "../actions";
@@ -38,6 +40,9 @@ function resolveSaleMessage(input: { detail?: string; error?: string; product?: 
 }
 
 export default async function NewSalePage({ searchParams }: NewSalePageProps) {
+  const session = await requireUserSession();
+  await requireModuleAccess(session, "SALES_CORE");
+
   const [products, customers, recentSales] = await Promise.all([
     prisma.product.findMany({
       where: { isActive: true },

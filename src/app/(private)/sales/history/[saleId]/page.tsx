@@ -2,7 +2,9 @@ import type { Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { requireUserSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
+import { requireModuleAccess } from "@/lib/platform/modules";
 import { getPaymentMethodLabel } from "@/lib/ui/labels";
 import { formatMadridDateTime } from "@/lib/utils/datetime";
 
@@ -52,6 +54,9 @@ type SaleDetailPageProps = {
 };
 
 export default async function SaleDetailPage({ params, searchParams }: SaleDetailPageProps) {
+  const session = await requireUserSession();
+  await requireModuleAccess(session, "SALES_CORE");
+
   const { saleId } = await params;
   const query = await searchParams;
   const backParams = new URLSearchParams();

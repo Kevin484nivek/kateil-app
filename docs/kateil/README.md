@@ -4,6 +4,7 @@
 
 - [KATEIL Foundation Charter v1](C:/Users/kevin/Documents/Playground/docs/kateil/foundation-charter-v1.md) - `Draft`
 - [KATEIL Source of Truth v1](C:/Users/kevin/Documents/Playground/repos/kateil-app/docs/kateil/source-of-truth-v1.md) - `Draft operativo`
+- [KATEIL Module Packaging and Control Matrix v1](C:/Users/kevin/Documents/Playground/repos/kateil-app/docs/kateil/module-packaging-control-matrix-v1.md) - `Draft operativo`
 
 ## Decisiones cerradas MVP (actual)
 

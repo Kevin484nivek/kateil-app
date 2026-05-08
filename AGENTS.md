@@ -84,6 +84,7 @@ Documento canónico adicional para entender la visión multi-tenant: `docs/katei
 - **Notion DB**: `Base de datos de proyectos`. Ficha: "Kateil App".
 - **Inventario homelab**: `server-overview`.
 - **Plantilla origen**: [project-template-kevbeaoca](https://github.com/Kevin484nivek/project-template-kevbeaoca).
+- **Skills disponibles**: catálogo en [agent-skills-kevbeaoca](https://github.com/Kevin484nivek/agent-skills-kevbeaoca) o `Projects/_skills/INDEX.md`. Auto-loaded en `~/.codex/skills/` y `~/.claude/skills/` (junctions). Invoca con `/skill-name` (Claude Code) o por referencia (Codex).
 
 ---
 

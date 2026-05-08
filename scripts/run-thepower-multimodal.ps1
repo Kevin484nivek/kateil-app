@@ -1,6 +1,6 @@
 param(
   [string]$SourceRoot = "C:\Users\kevin\Documents\ThePower",
-  [string]$OutputRoot = "C:\Users\kevin\Documents\Playground\data\thepower\multimodal",
+  [string]$OutputRoot = (Join-Path $PSScriptRoot "..\data\thepower\multimodal"),
   [int]$MaxSources = 3,
   [int]$SkipSources = 0,
   [int]$ChunkSeconds = 20,
@@ -13,7 +13,7 @@ param(
 $ErrorActionPreference = "Stop"
 $py = "C:\Users\kevin\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
 
-& $py "C:\Users\kevin\Documents\Playground\scripts\extract-thepower-multimodal.py" `
+& $py (Join-Path $PSScriptRoot "extract-thepower-multimodal.py") `
   --source-root $SourceRoot `
   --output-root $OutputRoot `
   --max-sources $MaxSources `

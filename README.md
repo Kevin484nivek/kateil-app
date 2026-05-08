@@ -24,6 +24,15 @@ Este repositorio nace como plantilla operativa basada en MiMarca:
 - documentación de transición en `docs/kateil/`
 - branding base ajustado a Kateil en shell principal
 
+## Entrada para desarrollo con IA
+
+- `AGENTS.md`
+- `docs/00-project-brief.md`
+- `docs/01-current-status.md`
+- `docs/kateil/source-of-truth-v1.md`
+- `docs/06-development.md`
+- `docs/07-operations.md`
+
 ## Variables de entorno
 
 Usa estos archivos como referencia:

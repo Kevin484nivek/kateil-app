@@ -1,6 +1,6 @@
 param(
-  [string]$InputCsv = "C:\Users\kevin\Documents\Playground\data\import-review\latest\01_suppliers_master.csv",
-  [string]$OutputSql = "C:\Users\kevin\Documents\Playground\data\import-review\latest\10_suppliers_import.sql"
+  [string]$InputCsv = (Join-Path $PSScriptRoot "..\data\import-review\latest\01_suppliers_master.csv"),
+  [string]$OutputSql = (Join-Path $PSScriptRoot "..\data\import-review\latest\10_suppliers_import.sql")
 )
 
 Set-StrictMode -Version Latest

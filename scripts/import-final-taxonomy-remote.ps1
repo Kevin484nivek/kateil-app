@@ -6,9 +6,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$categoriesPath = "C:\Users\kevin\Documents\Playground\data\import-review\final-taxonomy\categories_final.csv"
-$subtypesPath = "C:\Users\kevin\Documents\Playground\data\import-review\final-taxonomy\category_subtypes_final.csv"
-$seasonsPath = "C:\Users\kevin\Documents\Playground\data\import-review\final-taxonomy\category_seasons_final.csv"
+$categoriesPath = Join-Path $PSScriptRoot "..\data\import-review\final-taxonomy\categories_final.csv"
+$subtypesPath = Join-Path $PSScriptRoot "..\data\import-review\final-taxonomy\category_subtypes_final.csv"
+$seasonsPath = Join-Path $PSScriptRoot "..\data\import-review\final-taxonomy\category_seasons_final.csv"
 
 $categories = Import-Csv -Path $categoriesPath
 $subtypes = Import-Csv -Path $subtypesPath

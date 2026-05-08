@@ -381,7 +381,7 @@ def write_manifest(rows: list[dict[str, Any]], output_root: Path, run_id: str) -
 def main() -> None:
     parser = argparse.ArgumentParser(description="Extracción multimodal ThePower -> capa raw")
     parser.add_argument("--source-root", default=r"C:\Users\kevin\Documents\ThePower")
-    parser.add_argument("--output-root", default=r"C:\Users\kevin\Documents\Playground\data\thepower\multimodal")
+    parser.add_argument("--output-root", default=str(Path(__file__).resolve().parents[1] / "data" / "thepower" / "multimodal"))
     parser.add_argument("--max-sources", type=int, default=3)
     parser.add_argument("--skip-sources", type=int, default=0)
     parser.add_argument("--chunk-seconds", type=int, default=20)

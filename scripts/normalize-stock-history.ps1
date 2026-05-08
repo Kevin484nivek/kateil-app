@@ -2,7 +2,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$InputPath,
 
-  [string]$OutputDir = "C:\Users\kevin\Documents\Playground\data\import-review\latest"
+  [string]$OutputDir = (Join-Path $PSScriptRoot "..\data\import-review\latest")
 )
 
 Set-StrictMode -Version Latest

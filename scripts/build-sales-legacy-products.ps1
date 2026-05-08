@@ -1,7 +1,7 @@
 param(
-  [string]$ProductsCsv = "C:\Users\kevin\Documents\Playground\data\import-review\latest\03_products_normalized.csv",
-  [string]$SalesCsv = "C:\Users\kevin\Documents\Playground\data\import-review\latest\05_sales_normalized.csv",
-  [string]$OutputCsv = "C:\Users\kevin\Documents\Playground\data\import-review\latest\11_legacy_products_from_sales.csv"
+  [string]$ProductsCsv = (Join-Path $PSScriptRoot "..\data\import-review\latest\03_products_normalized.csv"),
+  [string]$SalesCsv = (Join-Path $PSScriptRoot "..\data\import-review\latest\05_sales_normalized.csv"),
+  [string]$OutputCsv = (Join-Path $PSScriptRoot "..\data\import-review\latest\11_legacy_products_from_sales.csv")
 )
 
 Set-StrictMode -Version Latest
@@ -108,7 +108,7 @@ function Guess-Subtype {
 if (-not (Test-Path $ProductsCsv)) { throw "No se encuentra el CSV de productos: $ProductsCsv" }
 if (-not (Test-Path $SalesCsv)) { throw "No se encuentra el CSV de ventas: $SalesCsv" }
 
-$supplierMaster = Import-Csv -Path "C:\Users\kevin\Documents\Playground\data\import-review\latest\01_suppliers_master.csv"
+$supplierMaster = Import-Csv -Path (Join-Path $PSScriptRoot "..\data\import-review\latest\01_suppliers_master.csv")
 $supplierByName = @{}
 foreach ($supplier in $supplierMaster) {
   $supplierByName[(Normalize-Text $supplier.supplier_name)] = $supplier

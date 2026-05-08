@@ -253,7 +253,7 @@ def write_manifest(rows: list[dict[str, Any]], output_root: Path, run_id: str) -
 def main() -> None:
     parser = argparse.ArgumentParser(description="Procesa videos específicos ThePower con captura densa.")
     parser.add_argument("--source-root", default=r"C:\Users\kevin\Documents\ThePower")
-    parser.add_argument("--output-root", default=r"C:\Users\kevin\Documents\Playground\data\thepower\multimodal")
+    parser.add_argument("--output-root", default=str(Path(__file__).resolve().parents[1] / "data" / "thepower" / "multimodal"))
     parser.add_argument("--videos", nargs="+", required=True)
     parser.add_argument("--chunk-seconds", type=int, default=20)
     parser.add_argument("--whisper-model", default="small")

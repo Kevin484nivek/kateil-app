@@ -1,6 +1,6 @@
 param(
-  [string]$ReviewDir = "C:\Users\kevin\Documents\Playground\data\import-review\2026-04-01-taxonomy-v4",
-  [string]$OutputDir = "C:\Users\kevin\Documents\Playground\data\import-review\final-taxonomy"
+  [string]$ReviewDir = (Join-Path $PSScriptRoot "..\data\import-review\2026-04-01-taxonomy-v4"),
+  [string]$OutputDir = (Join-Path $PSScriptRoot "..\data\import-review\final-taxonomy")
 )
 
 Set-StrictMode -Version Latest

@@ -487,8 +487,8 @@ def build_module_catalog(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Construye packs PDF completos reutilizando extracción multimodal.")
     parser.add_argument("--source-root", default=r"C:\Users\kevin\Documents\ThePower")
-    parser.add_argument("--runs-root", default=r"C:\Users\kevin\Documents\Playground\data\thepower\multimodal\runs")
-    parser.add_argument("--output-root", default=r"C:\Users\kevin\Documents\Playground\data\thepower\pdf_packs")
+    parser.add_argument("--runs-root", default=str(Path(__file__).resolve().parents[1] / "data" / "thepower" / "multimodal" / "runs"))
+    parser.add_argument("--output-root", default=str(Path(__file__).resolve().parents[1] / "data" / "thepower" / "pdf_packs"))
     parser.add_argument("--max-sources", type=int, default=0, help="0 = todas")
     args = parser.parse_args()
 

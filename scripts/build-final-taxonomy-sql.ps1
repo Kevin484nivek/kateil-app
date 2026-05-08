@@ -1,6 +1,6 @@
 param(
-  [string]$TaxonomyDir = "C:\Users\kevin\Documents\Playground\data\import-review\final-taxonomy",
-  [string]$OutputPath = "C:\Users\kevin\Documents\Playground\data\import-review\final-taxonomy\final-taxonomy.sql"
+  [string]$TaxonomyDir = (Join-Path $PSScriptRoot "..\data\import-review\final-taxonomy"),
+  [string]$OutputPath = (Join-Path $PSScriptRoot "..\data\import-review\final-taxonomy\final-taxonomy.sql")
 )
 
 Set-StrictMode -Version Latest

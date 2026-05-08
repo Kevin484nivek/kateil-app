@@ -1,6 +1,6 @@
 param(
   [string]$SourceRoot = "C:\Users\kevin\Documents\ThePower",
-  [string]$OutputCsv = "C:\Users\kevin\Documents\Playground\data\thepower\notion-knowledge-units-backlog.csv"
+  [string]$OutputCsv = (Join-Path $PSScriptRoot "..\data\thepower\notion-knowledge-units-backlog.csv")
 )
 
 Set-StrictMode -Version Latest

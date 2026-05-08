@@ -1,5 +1,5 @@
 param(
-  [string]$InputCsv = "C:\Users\kevin\Documents\Playground\data\import-review\latest\03_products_normalized.csv",
+  [string]$InputCsv = (Join-Path $PSScriptRoot "..\data\import-review\latest\03_products_normalized.csv"),
   [string]$SshHost = "docker-server-remote",
   [string]$RemoteDir = "/home/kevin/docker-services/mimarca-backoffice"
 )

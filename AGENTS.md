@@ -33,9 +33,29 @@ Documento canónico adicional para entender la visión multi-tenant: `docs/katei
 
 ---
 
-## 3. Protocolo de trabajo
+## 3. Skills operativas
 
-1. **Antes de implementar**: confirmar siguiente paso con el usuario.
+Las skills viven en `Projects/_skills/skills/` y el catálogo canónico está en `Projects/_skills/INDEX.md`.
+
+Regla para agentes: si la intención del usuario coincide con una skill, lee y aplica su `SKILL.md` antes de actuar. `AGENTS.md` mantiene contexto y reglas específicas; los workflows largos viven en skills.
+
+| Intención / evento | Skill |
+|---|---|
+| Fin de sesión | `close-session` |
+| Actualizar docs/estado/backlog/decisiones | `update-project-state` |
+| Commit + push GitHub | `publish-changes` |
+| Deploy al server | `deploy-to-server` |
+| Sincronizar docs + GitHub + Notion + server | `workspace-sync` |
+| Drift en server | `reconcile-server` |
+| Revisión pre-commit/pre-deploy | `code-review` |
+
+Al cerrar un hito, evalúa checkpoint: docs necesarias, commit/push, deploy si el runtime debe cambiar y sync externo si cambió Notion/server/inventario. Si el cambio es pequeño o incompleto, acumular hasta el siguiente checkpoint.
+
+---
+
+## 4. Protocolo de trabajo
+
+1. **Antes de implementar**: confirmar cambios de alcance, deploy, secretos o acciones destructivas. Para fixes pequeños y tareas ya acordadas, avanzar.
 2. `git status` antes de tocar nada.
 3. **Validación**: `npm install && npm run build` antes de cambios grandes. Si requiere DB, usar `.env.example` o `.env.supabase.dev.example` como referencia (sin commitear secretos).
 4. **Commits pequeños** con prefijo: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`, `ops:`.
@@ -43,7 +63,7 @@ Documento canónico adicional para entender la visión multi-tenant: `docs/katei
 
 ---
 
-## 4. Mantenimiento de documentación
+## 5. Mantenimiento de documentación
 
 ### Actualiza `docs/01-current-status.md` tras cualquiera de estos eventos:
 
@@ -70,7 +90,7 @@ Documento canónico adicional para entender la visión multi-tenant: `docs/katei
 
 ---
 
-## 5. Cierre de sesión
+## 6. Cierre de sesión
 
 1. Update final de `docs/01-current-status.md` si aplica.
 2. Commit final con mensaje claro.
@@ -78,7 +98,7 @@ Documento canónico adicional para entender la visión multi-tenant: `docs/katei
 
 ---
 
-## 6. Conexión con el workspace
+## 7. Conexión con el workspace
 
 - **Server**: no desplegado aún. Cuando se despliegue, será en `~/docker-services/kateil-app`.
 - **Notion DB**: `Base de datos de proyectos`. Ficha: "Kateil App".
@@ -88,7 +108,7 @@ Documento canónico adicional para entender la visión multi-tenant: `docs/katei
 
 ---
 
-## 7. Específico de este proyecto
+## 8. Específico de este proyecto
 
 - **Multi-tenant es el norte**: cualquier cambio nuevo se clasifica como `core` o `module` cuando afecte a producto. Mantener compatibilidad con el objetivo multi-tenant.
 - **Legacy intacto**: `C:\Users\kevin\Documents\Playground\repos\kateil-app` no se toca.

@@ -44,12 +44,12 @@ Regla para agentes: si la intención del usuario coincide con una skill, lee y a
 | Fin de sesión | `close-session` |
 | Actualizar docs/estado/backlog/decisiones | `update-project-state` |
 | Commit + push GitHub | `publish-changes` |
-| Deploy al server | `deploy-to-server` |
+| Deploy al server | No aplica todavía; no hay producción activa |
 | Sincronizar docs + GitHub + Notion + server | `workspace-sync` |
 | Drift en server | `reconcile-server` |
 | Revisión pre-commit/pre-deploy | `code-review` |
 
-Al cerrar un hito, evalúa checkpoint: docs necesarias, commit/push, deploy si el runtime debe cambiar y sync externo si cambió Notion/server/inventario. Si el cambio es pequeño o incompleto, acumular hasta el siguiente checkpoint.
+Al cerrar un hito, evalúa checkpoint: docs necesarias, commit/push y sync externo si cambió Notion/server/inventario. Este repo no tiene producción activa ni `.deploy/config.json`; no usar `deploy-to-server` hasta preparar server, dominio, healthchecks y backup. Si el cambio es pequeño o incompleto, acumular hasta el siguiente checkpoint.
 
 ---
 

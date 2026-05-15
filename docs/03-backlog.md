@@ -1,5 +1,7 @@
 # Backlog
 
+> Doc caliente: solo items abiertos y bloqueados. Lo completado se mueve a `docs/09-changelog.md` con fecha.
+
 ## Alta prioridad
 
 - Validar build local tras la migracion a `Projects`.

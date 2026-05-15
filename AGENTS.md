@@ -65,28 +65,46 @@ Al cerrar un hito, evalúa checkpoint: docs necesarias, commit/push y sync exter
 
 ## 5. Mantenimiento de documentación
 
-### Actualiza `docs/01-current-status.md` tras cualquiera de estos eventos:
+Usa `update-project-state` para mantener la documentación viva. `docs/01-current-status.md` debe ser un dashboard conciso, no un diario completo.
 
-- Commit con cambio de comportamiento.
+### Documentos calientes vs fríos
+
+- **Calientes** (`docs/01-current-status.md`, `docs/03-backlog.md`): se leen al entrar, escaneables en <2 min. Solo estado vivo: qué pasa ahora, qué está abierto, próximo paso, bloqueos. Cero historial, cero ítems cerrados.
+- **Fríos** (`docs/09-changelog.md`, `docs/05-decisions.md`): append-only, on-demand. Aquí va lo cerrado y el histórico.
+
+Reglas anti-drift (las aplica `update-project-state`; protocolo completo ahí):
+1. **Un dato -> un doc.** Métricas/estados viven en UN sitio; los demás enlazan, no transcriben.
+2. **Lo cerrado sale del caliente.** Ítem hecho -> se mueve a `docs/09-changelog.md` con fecha, no se tacha en sitio.
+3. **Verificar contra git/CI**, nunca copiar estado de un doc hermano.
+4. **Compactar en el checkpoint**, no cuando ya duele.
+
+### Actualiza documentación tras cualquiera de estos eventos:
+
+- Commit con cambio de comportamiento (feat/fix/refactor relevante) o cambio operativo.
 - Decisión técnica relevante.
 - Item significativo del backlog completado.
-- Bloqueo o riesgo nuevo.
-- **Cierre de sesión** (backstop).
+- Bloqueo o riesgo nuevo detectado.
+- Despliegue ejecutado o roto, si aplica.
+- **Cierre de sesión** (backstop garantizado).
 
-### Disparadores adicionales:
+### Actualiza adicionalmente según el evento:
 
 | Evento | Doc |
 |---|---|
 | Decisión técnica con fecha y razón | `docs/05-decisions.md` |
-| Item completado | quitar de `docs/03-backlog.md` |
-| Nueva tarea | añadir a `docs/03-backlog.md` |
+| Item completado | mover a `docs/09-changelog.md` con fecha y quitar de `docs/03-backlog.md` |
+| Nueva tarea detectada | añadir a `docs/03-backlog.md` |
 | Cambio de roadmap | `docs/02-roadmap.md` |
 | Cambio de arquitectura | `docs/04-architecture.md` |
 | Cambio de setup/dev | `docs/06-development.md` |
-| Nuevo enlace externo | `docs/08-links.md` |
+| Cambio operativo / despliegue | `docs/07-operations.md` |
+| Nuevo enlace externo relevante | `docs/08-links.md` |
+
+### NO actualices tras:
+Lecturas, edits sin commit, commits triviales, cada turno de conversación.
 
 ### Regla práctica
-> **Si la próxima IA que entre necesita saberlo para no romper algo, actualiza. Si no, no.**
+> **Si la próxima IA que entre necesita saberlo para no romper algo, actualízalo. Si no, no.**
 
 ---
 

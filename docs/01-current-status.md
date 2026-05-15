@@ -1,5 +1,7 @@
 # Current Status
 
+> Doc caliente: estado vivo, escaneable en <2 min. Sin historial ni logs; eso va a `docs/09-changelog.md`.
+
 ## Estado
 
 Repositorio base clonado en `C:\Users\kevin\Documents\Projects\kateil-app` y preparado como entorno profesional.
